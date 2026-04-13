@@ -37,16 +37,20 @@ jobs:
       - name: Push Docker image
         run: docker push patilreva/cicd-demo:latest
 
-      script: |
-  sudo docker pull patilreva/cicd-demo:latest
+      # 🚀 Auto Deploy to EC2 (CORRECT PLACE)
+      - name: Deploy to EC2
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.EC2_HOST }}
+          username: ${{ secrets.EC2_USER }}
+          key: ${{ secrets.EC2_KEY }}
+          script: |
+            sudo docker pull patilreva/cicd-demo:latest
 
-  # Stop & remove container by name (most important)
-  sudo docker stop myapp || true
-  sudo docker rm myapp || true
+            sudo docker stop myapp || true
+            sudo docker rm myapp || true
 
-  # Also clean any container using port 5000 (extra safety)
-  sudo docker ps -q --filter "publish=5000" | xargs -r sudo docker stop
-  sudo docker ps -a -q --filter "publish=5000" | xargs -r sudo docker rm
+            sudo docker ps -q --filter "publish=5000" | xargs -r sudo docker stop
+            sudo docker ps -a -q --filter "publish=5000" | xargs -r sudo docker rm
 
-  # Run new container
-  sudo docker run -d -p 5000:5000 --name myapp patilreva/cicd-demo
+            sudo docker run -d -p 5000:5000 --name myapp patilreva/cicd-demo
