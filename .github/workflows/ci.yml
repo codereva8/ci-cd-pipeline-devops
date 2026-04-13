@@ -36,12 +36,8 @@ jobs:
       # 🔥 Push image
       - name: Push Docker image
         run: docker push patilreva/cicd-demo:latest
-      # 🚀 Run container (simulate deployment)
-      - name: Run Docker container
-        run: |
-          docker run -d -p 5000:5000 patilreva/cicd-demo:latest
 
-                # 🚀 Auto Deploy to EC2
+      # 🚀 Auto Deploy to EC2
       - name: Deploy to EC2
         uses: appleboy/ssh-action@v1.0.3
         with:
@@ -50,7 +46,10 @@ jobs:
           key: ${{ secrets.EC2_KEY }}
           script: |
             sudo docker pull patilreva/cicd-demo:latest
-            sudo docker stop myapp || true
-            sudo docker rm myapp || true
+
+            # Stop any container using port 5000
+            sudo docker ps -q --filter "publish=5000" | xargs -r sudo docker stop
+            sudo docker ps -a -q --filter "publish=5000" | xargs -r sudo docker rm
+
+            # Run new container
             sudo docker run -d -p 5000:5000 --name myapp patilreva/cicd-demo
-    
